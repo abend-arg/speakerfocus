@@ -1,0 +1,5 @@
+
+.idea/
+services/orchestrator-go/bin/
+
+*.wav
