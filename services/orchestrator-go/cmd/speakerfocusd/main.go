@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/abend-arg/speakerfocus/services/orchestrator-go/internal/audio"
+	"github.com/abend-arg/speakerfocus/services/orchestrator-go/internal/audiocore"
 	"github.com/abend-arg/speakerfocus/services/orchestrator-go/internal/audioio/discard"
 	"github.com/abend-arg/speakerfocus/services/orchestrator-go/internal/audioio/wav"
 	"github.com/abend-arg/speakerfocus/services/orchestrator-go/internal/observability"
@@ -23,6 +24,7 @@ func main() {
 	var realtime bool
 	var inputLoops int
 	var discardOutput bool
+	var audioCoreAddr string
 
 	flag.StringVar(&inputPath, "input", "", "input WAV file")
 	flag.StringVar(&outputPath, "output", "", "output WAV file")
@@ -32,6 +34,7 @@ func main() {
 	flag.BoolVar(&realtime, "realtime", false, "pace WAV chunks at their audio duration")
 	flag.IntVar(&inputLoops, "input-loops", 1, "number of times to read the input WAV; set 0 to loop forever")
 	flag.BoolVar(&discardOutput, "discard-output", false, "discard output chunks instead of writing a WAV file")
+	flag.StringVar(&audioCoreAddr, "audio-core-addr", "", "audio core gRPC address; leave empty to bypass")
 	flag.Parse()
 
 	if inputPath == "" || (!discardOutput && outputPath == "") {
@@ -70,6 +73,13 @@ func main() {
 		}
 	}
 
+	var vad pipeline.VAD
+	if audioCoreAddr != "" {
+		vad = &audiocore.Client{
+			Addr: audioCoreAddr,
+		}
+	}
+
 	runner := pipeline.Runner{
 		Source: &wav.LoopingFileSource{
 			Path:          inputPath,
@@ -77,6 +87,7 @@ func main() {
 			Loops:         inputLoops,
 		},
 		Sink:     sink,
+		VAD:      vad,
 		Recorder: metrics,
 		Realtime: realtime,
 	}

@@ -107,6 +107,20 @@ histogram_quantile(
 )
 ```
 
+End-to-end latency:
+
+```promql
+histogram_quantile(
+  0.99,
+  sum by (le) (rate(speakerfocus_end_to_end_latency_seconds_bucket[5m]))
+)
+```
+
+The dashboard marks end-to-end latency thresholds:
+
+- 150 ms: warning
+- 200 ms: hard warning
+
 Throughput for 20 ms chunks should be close to 50 chunks per second:
 
 ```promql

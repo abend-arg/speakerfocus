@@ -73,6 +73,7 @@ func (s *WavFileSource) ReadChunk(ctx context.Context) (audio.Chunk, error) {
 		return audio.Chunk{}, io.EOF
 	}
 
+	capturedAt := time.Now()
 	bytesToRead := s.chunkBytes
 	if uint32(bytesToRead) > s.dataRemaining {
 		bytesToRead = int(s.dataRemaining)
@@ -95,6 +96,7 @@ func (s *WavFileSource) ReadChunk(ctx context.Context) (audio.Chunk, error) {
 		Data:         data,
 		FrameIndex:   s.frameIndex,
 		SampleOffset: s.sampleOffset,
+		CapturedAt:   capturedAt,
 		Duration:     framesToDuration(frames, s.format.SampleRate),
 	}
 

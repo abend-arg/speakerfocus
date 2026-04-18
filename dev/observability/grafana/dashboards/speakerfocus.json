@@ -22,19 +22,31 @@
   "links": [],
   "panels": [
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 10,
+      "panels": [],
+      "title": "General",
+      "type": "row"
+    },
+    {
       "datasource": {
         "type": "prometheus",
         "uid": "Prometheus"
       },
       "fieldConfig": {
         "defaults": {
+          "unit": "s",
           "custom": {
             "thresholdsStyle": {
               "mode": "line"
             }
           },
-          "max": 0.025,
-          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -56,7 +68,8 @@
               }
             ]
           },
-          "unit": "s"
+          "min": 0,
+          "max": 0.025
         },
         "overrides": []
       },
@@ -64,7 +77,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 0
+        "y": 1
       },
       "id": 1,
       "options": {
@@ -106,13 +119,12 @@
       },
       "fieldConfig": {
         "defaults": {
+          "unit": "s",
           "custom": {
             "thresholdsStyle": {
               "mode": "line"
             }
           },
-          "max": 0.025,
-          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -122,19 +134,16 @@
               },
               {
                 "color": "yellow",
-                "value": 0.01
-              },
-              {
-                "color": "yellow",
-                "value": 0.015
+                "value": 0.15
               },
               {
                 "color": "red",
-                "value": 0.02
+                "value": 0.2
               }
             ]
           },
-          "unit": "s"
+          "min": 0,
+          "max": 0.25
         },
         "overrides": []
       },
@@ -142,9 +151,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 0
+        "y": 1
       },
-      "id": 2,
+      "id": 6,
       "options": {
         "legend": {
           "calcs": [],
@@ -159,22 +168,22 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le, stage) (rate(speakerfocus_stage_duration_seconds_bucket[5m])))",
-          "legendFormat": "p50 {{stage}}",
+          "expr": "histogram_quantile(0.50, sum by (le, result) (rate(speakerfocus_end_to_end_latency_seconds_bucket[5m])))",
+          "legendFormat": "p50 {{result}}",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le, stage) (rate(speakerfocus_stage_duration_seconds_bucket[5m])))",
-          "legendFormat": "p95 {{stage}}",
+          "expr": "histogram_quantile(0.95, sum by (le, result) (rate(speakerfocus_end_to_end_latency_seconds_bucket[5m])))",
+          "legendFormat": "p95 {{result}}",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le, stage) (rate(speakerfocus_stage_duration_seconds_bucket[5m])))",
-          "legendFormat": "p99 {{stage}}",
+          "expr": "histogram_quantile(0.99, sum by (le, result) (rate(speakerfocus_end_to_end_latency_seconds_bucket[5m])))",
+          "legendFormat": "p99 {{result}}",
           "refId": "C"
         }
       ],
-      "title": "Stage Latency",
+      "title": "End-To-End Latency",
       "type": "timeseries"
     },
     {
@@ -190,9 +199,9 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
+        "w": 12,
         "x": 0,
-        "y": 8
+        "y": 9
       },
       "id": 3,
       "options": {
@@ -224,55 +233,15 @@
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 8
-      },
-      "id": 4,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "expr": "sum by (stage, reason) (rate(speakerfocus_stage_errors_total[5m]))",
-          "legendFormat": "{{stage}} {{reason}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Stage Errors Per Second",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
           "unit": "s"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 8
+        "w": 12,
+        "x": 12,
+        "y": 9
       },
       "id": 5,
       "options": {
@@ -295,6 +264,395 @@
         }
       ],
       "title": "Go GC Pause",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "id": 11,
+      "panels": [],
+      "title": "Source Stage",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(speakerfocus_stage_duration_seconds_bucket{stage=\"source_read\"}[5m])))",
+          "legendFormat": "p50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(speakerfocus_stage_duration_seconds_bucket{stage=\"source_read\"}[5m])))",
+          "legendFormat": "p95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(speakerfocus_stage_duration_seconds_bucket{stage=\"source_read\"}[5m])))",
+          "legendFormat": "p99",
+          "refId": "C"
+        }
+      ],
+      "title": "Source Read Latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (reason) (rate(speakerfocus_stage_errors_total{stage=\"source_read\"}[5m]))",
+          "legendFormat": "{{reason}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Source Errors Per Second",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
+      "id": 14,
+      "panels": [],
+      "title": "VAD Stage",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 27
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(speakerfocus_stage_duration_seconds_bucket{stage=\"vad_detect\"}[5m])))",
+          "legendFormat": "p50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(speakerfocus_stage_duration_seconds_bucket{stage=\"vad_detect\"}[5m])))",
+          "legendFormat": "p95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(speakerfocus_stage_duration_seconds_bucket{stage=\"vad_detect\"}[5m])))",
+          "legendFormat": "p99",
+          "refId": "C"
+        }
+      ],
+      "title": "VAD Detect Latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 27
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (state) (rate(speakerfocus_vad_decisions_total[5m])) / scalar(sum(rate(speakerfocus_vad_decisions_total[5m])))",
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ],
+      "title": "VAD State Percentage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 35
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(speakerfocus_vad_decisions_total{action=\"pass_through\"}[5m])) / scalar(sum(rate(speakerfocus_vad_decisions_total[5m])))",
+          "legendFormat": "voice or hangover",
+          "refId": "A"
+        }
+      ],
+      "title": "Voice Percentage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 35
+      },
+      "id": 18,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(speakerfocus_vad_decisions_total{action=\"silence\"}[5m])) / scalar(sum(rate(speakerfocus_vad_decisions_total[5m])))",
+          "legendFormat": "silence",
+          "refId": "A"
+        }
+      ],
+      "title": "Silence Percentage",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 43
+      },
+      "id": 19,
+      "panels": [],
+      "title": "Sink Stage",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 44
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(speakerfocus_stage_duration_seconds_bucket{stage=\"sink_write\"}[5m])))",
+          "legendFormat": "p50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(speakerfocus_stage_duration_seconds_bucket{stage=\"sink_write\"}[5m])))",
+          "legendFormat": "p95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(speakerfocus_stage_duration_seconds_bucket{stage=\"sink_write\"}[5m])))",
+          "legendFormat": "p99",
+          "refId": "C"
+        }
+      ],
+      "title": "Sink Write Latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 44
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (reason) (rate(speakerfocus_stage_errors_total{stage=\"sink_write\"}[5m]))",
+          "legendFormat": "{{reason}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Sink Errors Per Second",
       "type": "timeseries"
     }
   ],

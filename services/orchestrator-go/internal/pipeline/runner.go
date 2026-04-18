@@ -8,20 +8,31 @@ import (
 	"time"
 
 	"github.com/abend-arg/speakerfocus/services/orchestrator-go/internal/audio"
+	"github.com/abend-arg/speakerfocus/services/orchestrator-go/internal/policy"
 )
 
 type Recorder interface {
 	ObserveChunkDuration(result string, duration time.Duration)
+	ObserveEndToEndLatency(result string, duration time.Duration)
 	ObserveStageDuration(stage string, duration time.Duration)
 	IncChunk(result string)
+	IncVADDecision(action string, state string)
 	IncStageError(stage string, reason string)
 }
 
 type Runner struct {
 	Source   audio.Source
 	Sink     audio.Sink
+	VAD      VAD
+	Policy   policy.VADPolicy
 	Recorder Recorder
 	Realtime bool
+}
+
+type VAD interface {
+	Open(ctx context.Context, format audio.Format) error
+	DetectVoice(ctx context.Context, chunk audio.Chunk) (policy.VoiceDecision, error)
+	Close() error
 }
 
 func (r Runner) Run(ctx context.Context) (err error) {
@@ -47,6 +58,15 @@ func (r Runner) Run(ctx context.Context) (err error) {
 		err = errors.Join(err, r.Sink.Close())
 	}()
 
+	if r.VAD != nil {
+		if err := r.VAD.Open(ctx, format); err != nil {
+			return err
+		}
+		defer func() {
+			err = errors.Join(err, r.VAD.Close())
+		}()
+	}
+
 	for {
 		chunkStart := time.Now()
 
@@ -61,6 +81,21 @@ func (r Runner) Run(ctx context.Context) (err error) {
 			return err
 		}
 
+		if r.VAD != nil {
+			decision, err := runStage(ctx, r.Recorder, "vad_detect", func() (policy.VoiceDecision, error) {
+				return r.VAD.DetectVoice(ctx, chunk)
+			})
+			if err != nil {
+				recordChunk(r.Recorder, "error", time.Since(chunkStart))
+				return err
+			}
+			action := r.Policy.Decide(decision)
+			recordVADDecision(r.Recorder, action, decision.State)
+			if action == policy.AudioActionSilence {
+				clear(chunk.Data)
+			}
+		}
+
 		if err := runStageNoValue(ctx, r.Recorder, "sink_write", func() error {
 			return r.Sink.WriteChunk(ctx, chunk)
 		}); err != nil {
@@ -68,6 +103,7 @@ func (r Runner) Run(ctx context.Context) (err error) {
 			return err
 		}
 
+		recordEndToEndLatency(r.Recorder, "ok", chunk.CapturedAt)
 		recordChunk(r.Recorder, "ok", time.Since(chunkStart))
 
 		if r.Realtime {
@@ -106,6 +142,20 @@ func recordChunk(recorder Recorder, result string, duration time.Duration) {
 	}
 	recorder.ObserveChunkDuration(result, duration)
 	recorder.IncChunk(result)
+}
+
+func recordVADDecision(recorder Recorder, action policy.AudioAction, state policy.VoiceState) {
+	if recorder == nil {
+		return
+	}
+	recorder.IncVADDecision(string(action), string(state))
+}
+
+func recordEndToEndLatency(recorder Recorder, result string, capturedAt time.Time) {
+	if recorder == nil || capturedAt.IsZero() {
+		return
+	}
+	recorder.ObserveEndToEndLatency(result, time.Since(capturedAt))
 }
 
 func errorReason(err error) string {

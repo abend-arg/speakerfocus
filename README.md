@@ -79,13 +79,48 @@ http://localhost:9090
 
 For a Jetson on the network, change `dev/observability/prometheus/prometheus.yml` from `host.docker.internal:2112` to `JETSON_IP:2112`, and run the daemon on the Jetson with `-metrics-addr 0.0.0.0:2112`.
 
-Start observability and then run the daemon from one command:
+Start observability, the Python audio core, and the daemon from one command:
 
 ```sh
 make dev
 ```
 
-`make dev` starts Prometheus/Grafana, then runs the daemon with `REALTIME=true INPUT_LOOPS=0 DISCARD_OUTPUT=true`.
+`make dev` starts Prometheus/Grafana, starts the audio core with
+`AUDIO_CORE_VAD_BACKEND=silero` by default, then runs the daemon with
+`REALTIME=true INPUT_LOOPS=0 DISCARD_OUTPUT=true`.
+
+## Python audio core
+
+The Python audio core exposes ML-oriented audio capabilities over gRPC. The
+first capability is VAD: the Python service returns a voice decision, and the Go
+orchestrator decides whether to keep the original chunk or replace it with PCM
+zeros so the output timeline stays continuous.
+
+Install the Python dependencies with:
+
+```sh
+make audio-core-sync
+```
+
+Run only the audio core with:
+
+```sh
+make audio-core
+```
+
+Use WebRTC VAD instead of Silero with:
+
+```sh
+make audio-core AUDIO_CORE_VAD_BACKEND=webrtc
+```
+
+Then enable it in the Go orchestrator manually:
+
+```sh
+make run AUDIO_CORE_ADDR=127.0.0.1:50051
+```
+
+For details, see `docs/vad-audio-core.md`.
 
 Stop Prometheus and Grafana with:
 
@@ -97,8 +132,10 @@ Current metrics include:
 
 ```text
 speakerfocus_chunk_duration_seconds{result="ok|error"}
+speakerfocus_end_to_end_latency_seconds{result="ok|error"}
 speakerfocus_stage_duration_seconds{stage="source_read|sink_write|..."}
 speakerfocus_chunks_total{result="ok|error"}
+speakerfocus_vad_decisions_total{action="pass_through|silence",state="..."}
 speakerfocus_stage_errors_total{stage="...",reason="..."}
 ```
 

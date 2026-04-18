@@ -12,6 +12,7 @@ import (
 	"github.com/abend-arg/speakerfocus/services/orchestrator-go/internal/audio"
 	"github.com/abend-arg/speakerfocus/services/orchestrator-go/internal/audioio/wav"
 	"github.com/abend-arg/speakerfocus/services/orchestrator-go/internal/pipeline"
+	"github.com/abend-arg/speakerfocus/services/orchestrator-go/internal/policy"
 )
 
 func TestRunnerCopiesWavInputToOutput(t *testing.T) {
@@ -102,6 +103,46 @@ func TestRunnerCopiesLoopedWavInputToOutput(t *testing.T) {
 	}
 }
 
+func TestRunnerProcessesChunksBeforeWriting(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	inputPath := filepath.Join(dir, "input.wav")
+	outputPath := filepath.Join(dir, "output.wav")
+
+	format := audio.Format{
+		SampleRate:     8000,
+		Channels:       1,
+		SampleFormat:   audio.SampleFormatS16LE,
+		BytesPerSample: 2,
+	}
+	pcm := bytes.Repeat([]byte{0x7f}, 1600)
+	writeTestWav(t, inputPath, format, pcm)
+
+	runner := pipeline.Runner{
+		Source: &wav.WavFileSource{
+			Path:          inputPath,
+			ChunkDuration: 20 * time.Millisecond,
+		},
+		Sink: &wav.WavFileSink{
+			Path: outputPath,
+		},
+		VAD: silenceVAD{},
+	}
+
+	if err := runner.Run(context.Background()); err != nil {
+		t.Fatalf("run pipeline: %v", err)
+	}
+
+	gotFormat, gotPCM := readTestWav(t, outputPath)
+	if gotFormat != format {
+		t.Fatalf("format mismatch: got %#v want %#v", gotFormat, format)
+	}
+	if !bytes.Equal(gotPCM, make([]byte, len(pcm))) {
+		t.Fatalf("processed PCM mismatch: got %d bytes want zeroed PCM", len(gotPCM))
+	}
+}
+
 func writeTestWav(t *testing.T, path string, format audio.Format, pcm []byte) {
 	t.Helper()
 
@@ -147,4 +188,28 @@ func readTestWav(t *testing.T, path string) (audio.Format, []byte) {
 	}
 
 	return format, pcm
+}
+
+type silenceVAD struct{}
+
+func (silenceVAD) Open(ctx context.Context, format audio.Format) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	return format.Validate()
+}
+
+func (silenceVAD) DetectVoice(ctx context.Context, chunk audio.Chunk) (policy.VoiceDecision, error) {
+	if err := ctx.Err(); err != nil {
+		return policy.VoiceDecision{}, err
+	}
+	return policy.VoiceDecision{
+		SpeechProbability: 0,
+		IsSpeech:          false,
+		State:             policy.VoiceStateSilence,
+	}, nil
+}
+
+func (silenceVAD) Close() error {
+	return nil
 }

@@ -21,6 +21,7 @@ METRICS_PATH ?= /metrics
 REALTIME ?= false
 INPUT_LOOPS ?= 1
 DISCARD_OUTPUT ?= false
+AUDIO_CORE_ADDR ?=
 
 GO_ENV := GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO_ENABLED)
 GO_BUILD_FLAGS :=
@@ -44,7 +45,7 @@ help:
 	@printf '%s\n' ''
 	@printf '%s\n' 'Common variables:'
 	@printf '%s\n' '  INPUT=test.wav OUTPUT=output.wav CHUNK_MS=20 METRICS_ADDR=127.0.0.1:2112'
-	@printf '%s\n' '  REALTIME=false INPUT_LOOPS=1 DISCARD_OUTPUT=false'
+	@printf '%s\n' '  REALTIME=false INPUT_LOOPS=1 DISCARD_OUTPUT=false AUDIO_CORE_ADDR='
 	@printf '%s\n' '  GOOS=linux GOARCH=arm64 CGO_ENABLED=0 BUILD_DIR=./bin LDFLAGS=... TAGS=...'
 	@printf '%s\n' '  ARGS="extra flags"'
 
@@ -65,6 +66,7 @@ run:
 		-realtime="$(REALTIME)" \
 		-input-loops="$(INPUT_LOOPS)" \
 		-discard-output="$(DISCARD_OUTPUT)" \
+		-audio-core-addr="$(AUDIO_CORE_ADDR)" \
 		$(ARGS)
 
 run-bin: build
@@ -77,6 +79,7 @@ run-bin: build
 		-realtime="$(REALTIME)" \
 		-input-loops="$(INPUT_LOOPS)" \
 		-discard-output="$(DISCARD_OUTPUT)" \
+		-audio-core-addr="$(AUDIO_CORE_ADDR)" \
 		$(ARGS)
 
 tidy:
