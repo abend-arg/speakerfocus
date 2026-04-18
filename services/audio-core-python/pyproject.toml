@@ -1,0 +1,41 @@
+[project]
+name = "speakerfocus-audio-core"
+version = "0.1.0"
+description = "Python audio core service for SpeakerFocus."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "grpcio>=1.76.0",
+  "grpcio-tools>=1.76.0",
+  "numpy>=2.0.0",
+  "silero-vad[onnx-cpu]>=6.2.0",
+  "torch==2.5.1+cpu ; platform_machine == 'x86_64' and platform_system == 'Linux'",
+  "torchaudio==2.5.1+cpu ; platform_machine == 'x86_64' and platform_system == 'Linux'",
+  "webrtcvad-wheels>=2.0.14",
+]
+
+[project.scripts]
+speakerfocus-audio-core = "speakerfocus_audio_core.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cpu", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
+]
+torchaudio = [
+  { index = "pytorch-cpu", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/speakerfocus_audio_core", "src/audio_core"]

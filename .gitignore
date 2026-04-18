@@ -3,3 +3,9 @@
 services/orchestrator-go/bin/
 
 *.wav
+
+.venv/
+__pycache__/
+*.py[cod]
+
+.codex
